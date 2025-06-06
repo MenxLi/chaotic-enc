@@ -21,7 +21,7 @@ fn generate_map(opt: LogisticMapOptions) -> Vec<u8> {
     pixels
 }
 
-pub fn encode(im: Vec<[u8; 3]>, x0: f64) -> Vec<[u8; 3]> {
+pub fn encode(im: &Vec<[u8; 3]>, x0: f64) -> Vec<[u8; 3]> {
     let enc_map = generate_map(LogisticMapOptions {
         x: x0,
         r: R,  
