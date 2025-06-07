@@ -1,6 +1,9 @@
 /target
-
 Cargo.lock
 
 encoded.png
 recovered.png
+
+pkg
+node_modules
+package-lock.json

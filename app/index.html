@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./style.css">
+</head>
+
+<body>
+    <title>Image encoder</title>
+
+    <div id="input-container">
+        <div id="secret-container">
+            <label>Select an image file.</label>
+            <input type="file" id="fileInput" accept="image/*" required>
+            <br>
+            <label for="secretInput">Secret:</label>
+            <input id="secretInput" placeholder="Enter your secret here" autocomplete="off">
+        </div>
+
+        <div id="button-container">
+            <button id="encodeButton">Encode</button>
+            <button id="decodeButton">Decode</button>
+        </div>
+    </div>
+
+    <div id="output-container">
+        <div id="downloadBtnContainer">
+            <button id="downloadBtn" style="display: none;">Download Image</button>
+        </div>
+        <label id="hint">Enter a secret and select an image file to encode / decode.</label>
+        <div id="inputImg"></div>
+        <div id="output"></div>
+        <div id="error"></div>
+    </div>
+
+</body>
+
+<script type="module">
+    if (!window.WebAssembly) {
+        alert("WebAssembly is not supported in your browser. Please use a modern browser.");
+    }
+
+    const secretInput = document.getElementById('secretInput');
+    const fileInput = document.getElementById('fileInput');
+    const inputImgDiv = document.getElementById('inputImg');
+    const outputDiv = document.getElementById('output');
+    const hintLabel = document.getElementById('hint');
+    const encodeButton = document.getElementById('encodeButton');
+    const decodeButton = document.getElementById('decodeButton');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const errorDiv = document.getElementById('error');
+    const worker = new Worker('./worker.js', { type: 'module' });
+
+    async function getInputBlob() {
+        const file = fileInput.files[0];
+        const arrayBuffer = await file.arrayBuffer();
+        return new Uint8Array(arrayBuffer);
+    }
+
+    function checkInput() {
+        if (secretInput.value.trim() === '') {
+            showError("Secret cannot be empty");
+            throw new Error("Secret cannot be empty");
+        }
+        if (fileInput.files.length === 0) {
+            showError("No image file selected");
+            throw new Error("No image file selected");
+        }
+    }
+
+    async function showError(msg) {
+        resetOutput();
+        errorDiv.textContent = msg;
+        errorDiv.style.display = 'block';
+        console.error(msg);
+    }
+
+    function resetOutput() {
+        hintLabel.textContent = 'Enter a secret and select an image file to encode / decode.';
+        inputImgDiv.innerHTML = '';
+        outputDiv.innerHTML = '';
+        errorDiv.textContent = '';
+        errorDiv.style.display = 'none';
+        downloadBtn.style.display = 'none';
+    }
+
+    async function showImage(imBlob) {
+        resetOutput();
+        hintLabel.textContent = '';
+        const blob = new Blob([imBlob], { type: 'image/png' });
+        const url = URL.createObjectURL(blob);
+
+        const imgElem = document.createElement('img');
+        imgElem.src = url;
+        imgElem.alt = 'Encoded Image';
+        outputDiv.appendChild(imgElem);
+
+        downloadBtn.style.display = 'block';
+        downloadBtn.onclick = () => {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'encoded_image.png';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        };
+    }
+
+    async function encode_image() {
+        checkInput();
+        resetOutput();
+
+        const inputBlob = await getInputBlob();
+
+        hintLabel.textContent = `Encoding...`;
+
+        worker.postMessage({type: 'encode', buffer: inputBlob, secret: secretInput.value });
+        worker.onmessage = async (event) => {
+            if (event.data.error) {
+                await showError(`Error encoding: ${event.data.error}`);
+                console.error(event.data.error);
+                return;
+            }
+            const outputBlob = event.data.buffer;
+            await showImage(outputBlob);
+        };
+
+    }
+
+    async function decode_image() {
+        checkInput();
+        resetOutput();
+
+        const inputBlob = await getInputBlob();
+
+        hintLabel.textContent = `Decoding...`;
+
+        let outputBlob;
+        worker.postMessage({type: 'decode',  buffer: inputBlob, secret: secretInput.value });
+        worker.onmessage = async (event) => {
+            if (event.data.error) {
+                await showError(`Error decoding: ${event.data.error}`);
+                console.error(event.data.error);
+                return;
+            }
+            outputBlob = event.data.buffer;
+            await showImage(outputBlob);
+        };
+    }
+
+    encodeButton.addEventListener('click', encode_image);
+    decodeButton.addEventListener('click', decode_image);
+    fileInput.addEventListener('change', ()=>{
+        resetOutput();
+        hintLabel.textContent += ' (Below is the selected image)';
+        const file = fileInput.files[0];
+        if (file) {
+            const imgElem = document.createElement('img');
+            imgElem.src = URL.createObjectURL(file);
+            imgElem.alt = 'Selected Image';
+            inputImgDiv.innerHTML = '';
+            inputImgDiv.appendChild(imgElem);
+        }
+    });
+
+</script>
+</html>
