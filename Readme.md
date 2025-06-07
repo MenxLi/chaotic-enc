@@ -1,15 +1,9 @@
-Chaotic image encryption using the logistic map.
+A simple image encryption and decryption tool. 
 
-Build with:
-```sh
-cargo build --release
-```
+The code runs at browser side, using WebAssembly.   
+The encryption is based on Chaotic Logistic Map.
 
-Usage:
-```sh
-# encode 
-./target/release/cenc -i original.png -o encoded.png -s your_secret_key
+A hosted version is available at [here](https://menxli.github.io/chaotic-enc/).
 
-# decode
-./target/release/cdec -i encoded.png -o recovered.png -s your_secret_key
-```
+To build for your own use, you need to install Rust and wasm-pack.  
+Then run `make wasm`. The frontend will be built at `app/` directory.
