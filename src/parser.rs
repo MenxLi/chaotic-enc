@@ -15,18 +15,18 @@ struct Args {
     secret: String,
 }
 
-fn str2f(s: &str) -> f64 {
+fn str2f(s: &str) -> f32 {
     let mut hasher = DefaultHasher::new();
     s.hash(&mut hasher);
     let hash = hasher.finish();
-    let x = (hash as f64) / (u64::MAX as f64);
+    let x = (hash as f32) / (u64::MAX as f32);
     x
 }
 
 pub struct FuncArgs {
     pub input: String,
     pub output: String,
-    pub seed: f64,
+    pub seed: f32,
 }
 
 pub fn parse_args() -> FuncArgs {
