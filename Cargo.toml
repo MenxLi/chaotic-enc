@@ -6,3 +6,11 @@ edition = "2024"
 [dependencies]
 clap = { version = "4.5.39", features = ["derive"] }
 image = "0.25.6"
+
+[[bin]]
+name="cenc"
+path="src/encode.rs"
+
+[[bin]]
+name="cdec"
+path="src/decode.rs"
