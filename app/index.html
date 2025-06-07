@@ -52,6 +52,12 @@
     const errorDiv = document.getElementById('error');
     const worker = new Worker('./worker.js', { type: 'module' });
 
+    const urlParams = new URLSearchParams(window.location.search);
+    const secretFromUrl = urlParams.get('secret') || urlParams.get('s');
+    if (secretFromUrl) {
+        secretInput.value = decodeURIComponent(secretFromUrl);
+    }
+
     async function getInputBlob() {
         const file = fileInput.files[0];
         const arrayBuffer = await file.arrayBuffer();

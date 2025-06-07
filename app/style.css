@@ -38,6 +38,10 @@ div#output-container {
     gap: 0.25rem;
 }
 
+div#button-container {
+    margin-top: 0.5rem;
+}
+
 img {
     max-width: 100%;
     height: auto;
