@@ -8,6 +8,17 @@ body {
     margin-left: auto;
 }
 
+div#drop-zone {
+    border: 2px dashed #ccc;
+    border-radius: 0.5rem;
+    padding-inline: 0.5rem;
+    padding-block: 2rem;
+    text-align: center;
+    background-color: #f9f9f9;
+    transition: background-color 0.3s ease-in-out;
+    margin-bottom: 0.5rem;
+}
+
 div#secret-container {
     display: flex;
     flex-direction: column;

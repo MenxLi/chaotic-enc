@@ -11,6 +11,11 @@
 
     <div id="input-container">
         <div id="secret-container">
+            <div id="drop-zone" style="display: none;">
+                <p>Drag and drop an image file here.</p>
+                <p>Supported formats: PNG, JPEG, BMP, ...</p>
+            </div>
+
             <label>Select an image file.</label>
             <input type="file" id="fileInput" accept="image/*" required>
             <br>
@@ -179,6 +184,46 @@
             inputImgDiv.appendChild(imgElem);
         }
     });
+
+    // handle drag and drop
+    {
+        const dropZone = document.getElementById('drop-zone');
+        let inDrag = false;
+        let taskId = null;
+        function hideDropZone() {
+            if (inDrag) return;
+            dropZone.style.display = 'none';
+        }
+        window.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            dropZone.style.display = 'block';
+            inDrag = true;
+            if (taskId) { window.clearTimeout(taskId); }
+            taskId = window.setTimeout(hideDropZone, 100);
+        });
+        window.addEventListener('dragmove', (event) => {
+            event.preventDefault();
+            dropZone.style.display = 'block';
+            inDrag = true;
+            if (taskId) { window.clearTimeout(taskId); }
+            taskId = window.setTimeout(hideDropZone, 100);
+        });
+        window.addEventListener('dragleave', (event) => {
+            event.preventDefault();
+            inDrag = false;
+            if (taskId) { window.clearTimeout(taskId); }
+            taskId = window.setTimeout(hideDropZone, 100);
+        });
+        dropZone.addEventListener('drop', (event) => {
+            event.preventDefault();
+            if (event.dataTransfer.files.length > 0) {
+                fileInput.files = event.dataTransfer.files;
+                fileInput.dispatchEvent(new Event('change'));
+            }
+            inDrag = false;
+            dropZone.style.display = 'none';
+        });
+    }
 
 </script>
 </html>
