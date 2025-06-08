@@ -83,12 +83,12 @@
     }
 
     function resetOutput() {
-        hintLabel.textContent = 'Enter a secret and select an image file to encode / decode.';
         inputImgDiv.innerHTML = '';
         outputDiv.innerHTML = '';
         errorDiv.textContent = '';
         errorDiv.style.display = 'none';
         downloadBtn.style.display = 'none';
+        hintLabel.textContent = 'Enter a secret and select an image file to encode / decode.';
     }
 
     async function showImage(imBlob) {
@@ -116,44 +116,27 @@
     async function encode_image() {
         checkInput();
         resetOutput();
-
         const inputBlob = await getInputBlob();
-
         hintLabel.textContent = `Encoding...`;
-
         worker.postMessage({type: 'encode', buffer: inputBlob, secret: secretInput.value });
-        worker.onmessage = async (event) => {
-            if (event.data.error) {
-                await showError(`Error encoding: ${event.data.error}`);
-                console.error(event.data.error);
-                return;
-            }
-            const outputBlob = event.data.buffer;
-            await showImage(outputBlob);
-        };
-
     }
 
     async function decode_image() {
         checkInput();
         resetOutput();
-
         const inputBlob = await getInputBlob();
-
         hintLabel.textContent = `Decoding...`;
-
-        let outputBlob;
         worker.postMessage({type: 'decode',  buffer: inputBlob, secret: secretInput.value });
-        worker.onmessage = async (event) => {
-            if (event.data.error) {
-                await showError(`Error decoding: ${event.data.error}`);
-                console.error(event.data.error);
-                return;
-            }
-            outputBlob = event.data.buffer;
-            await showImage(outputBlob);
-        };
     }
+
+    worker.onmessage = async (event) => {
+        if (event.data.error) {
+            await showError(`Error decoding: ${event.data.error}`);
+            console.error(event.data.error);
+            return;
+        }
+        await showImage(event.data.buffer);
+    };
 
     encodeButton.addEventListener('click', encode_image);
     decodeButton.addEventListener('click', decode_image);
