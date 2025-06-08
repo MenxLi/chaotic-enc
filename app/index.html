@@ -81,18 +81,17 @@
     }
 
     function checkInput() {
-        if (secretInput.value.trim() === '') {
-            showError("Secret cannot be empty");
-            throw new Error("Secret cannot be empty");
-        }
         if (fileInput.files.length === 0) {
             showError("No image file selected");
             throw new Error("No image file selected");
         }
+        if (secretInput.value.trim() === '') {
+            showError("Secret cannot be empty");
+            throw new Error("Secret cannot be empty");
+        }
     }
 
     async function showError(msg) {
-        resetOutput();
         errorDiv.textContent = msg;
         errorDiv.style.display = 'block';
         console.error(msg);
