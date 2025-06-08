@@ -16,6 +16,13 @@
             <br>
             <label for="secretInput">Secret:</label>
             <input id="secretInput" placeholder="Enter your secret here" autocomplete="off">
+
+            <span style="margin-top: 0.25rem">
+            <input type="checkbox" id="limitMaxSide" checked>
+            <label for="limitMaxSide">Limit max side to </label>
+            <input type="number" id="maxSide" value="1024" min="1" max="25565" step="1" style="width: 4em;">
+            <label for="maxSide">px</label>
+            </span>
         </div>
 
         <div id="button-container">
@@ -34,6 +41,13 @@
         <div id="error"></div>
     </div>
 
+    <div id="footer">
+        <p style="text-align: center; font-size: 0.8em; color: #666">
+            The code runs entirely in your browser using WebAssembly. <br>
+            The source code is available at <a href="https://github.com/MenxLi/chaotic-enc">menxli/chaotic-enc</a>.
+        </p>
+    </div>
+
 </body>
 
 <script type="module">
@@ -43,6 +57,8 @@
 
     const secretInput = document.getElementById('secretInput');
     const fileInput = document.getElementById('fileInput');
+    const limitMaxSideInput = document.getElementById('limitMaxSide');
+    const maxSideInput = document.getElementById('maxSide');
     const inputImgDiv = document.getElementById('inputImg');
     const outputDiv = document.getElementById('output');
     const hintLabel = document.getElementById('hint');
@@ -99,14 +115,14 @@
 
         const imgElem = document.createElement('img');
         imgElem.src = url;
-        imgElem.alt = 'Encoded Image';
+        imgElem.alt = 'Image';
         outputDiv.appendChild(imgElem);
 
         downloadBtn.style.display = 'block';
         downloadBtn.onclick = () => {
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'encoded_image.png';
+            a.download = 'image.png';
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -118,7 +134,12 @@
         resetOutput();
         const inputBlob = await getInputBlob();
         hintLabel.textContent = `Encoding...`;
-        worker.postMessage({type: 'encode', buffer: inputBlob, secret: secretInput.value });
+        worker.postMessage({
+            type: 'encode', 
+            buffer: inputBlob, 
+            secret: secretInput.value, 
+            maxSide: limitMaxSideInput.checked ? parseInt(maxSideInput.value) : -1
+            });
     }
 
     async function decode_image() {
@@ -126,7 +147,12 @@
         resetOutput();
         const inputBlob = await getInputBlob();
         hintLabel.textContent = `Decoding...`;
-        worker.postMessage({type: 'decode',  buffer: inputBlob, secret: secretInput.value });
+        worker.postMessage({
+            type: 'decode',  
+            buffer: inputBlob, 
+            secret: secretInput.value, 
+            maxSide: limitMaxSideInput.checked ? parseInt(maxSideInput.value) : -1
+            });
     }
 
     worker.onmessage = async (event) => {
