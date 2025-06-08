@@ -25,11 +25,11 @@ pub struct ImageOptions {
     pub height: u32,
 }
 
-fn str2f(s: &str) -> f32 {
+fn str2f(s: &str) -> f64 {
     let mut hasher = DefaultHasher::new();
     s.hash(&mut hasher);
     let hash = hasher.finish();
-    let x = (hash as f32) / (u64::MAX as f32);
+    let x = (hash as f64) / (u64::MAX as f64);
     x
 }
 
@@ -40,9 +40,9 @@ fn img2vec(im: &[u8], limit_max_side: Option<u32>) -> (Vec<[u8; 3]>, ImageOption
     if let Some(max_side) = limit_max_side {
         let (mut width, mut height) = rgb.dimensions();
         if width > max_side || height > max_side {
-            let scale = max_side as f32 / width.max(height) as f32;
-            width = (width as f32 * scale).round() as u32;
-            height = (height as f32 * scale).round() as u32;
+            let scale = max_side as f64 / width.max(height) as f64;
+            width = (width as f64 * scale).round() as u32;
+            height = (height as f64 * scale).round() as u32;
             rgb = image::imageops::resize(
                 &rgb, width, height, 
                 image::imageops::FilterType::Lanczos3
@@ -73,9 +73,9 @@ fn vec2pngblob(pixels: &Vec<[u8; 3]>, im_opt: ImageOptions, limit_max_side: Opti
 
     if let Some(max_side) = limit_max_side {
         if width > max_side || height > max_side {
-            let scale = max_side as f32 / width.max(height) as f32;
-            width = (width as f32 * scale).round() as u32;
-            height = (height as f32 * scale).round() as u32;
+            let scale = max_side as f64 / width.max(height) as f64;
+            width = (width as f64 * scale).round() as u32;
+            height = (height as f64 * scale).round() as u32;
             img = image::imageops::resize(
                 &img, width, height, 
                 image::imageops::FilterType::Lanczos3
@@ -102,12 +102,11 @@ pub fn encode(im: &[u8], secret: &str, max_side: i32) -> Box<[u8]> {
     console_log!("Encoding image with secret: {}, max_side: {}", secret, max_side);
     let max_side = if max_side < 1 { None } else { Some(max_side as u32) };
 
-    let (mut im_v, im_opt) = img2vec(im, max_side);
+    let (im_v, im_opt) = img2vec(im, max_side);
+    let seed = str2f(&secret);
+    console_log!("Seed: {}", seed);
 
-    let pixels = logistic_map::encode(
-        &mut im_v,
-        str2f(&secret)
-    );
+    let pixels = logistic_map::encode(&im_v, seed);
 
     vec2pngblob(&pixels, im_opt, None)
 }
@@ -118,11 +117,10 @@ pub fn decode(im: &[u8], secret: &str, max_side: i32) -> Box<[u8]> {
     let max_side = if max_side < 1 { None } else { Some(max_side as u32) };
 
     let (im_v, im_opt) = img2vec(im, None);
+    let seed = str2f(&secret);
+    console_log!("Seed: {}", seed);
 
-    let pixels = logistic_map::decode(
-        &im_v,
-        str2f(&secret)
-    );
+    let pixels = logistic_map::decode(&im_v, seed);
 
     vec2pngblob(&pixels, im_opt, max_side)
 }

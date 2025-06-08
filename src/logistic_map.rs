@@ -1,14 +1,14 @@
 
 
-const R: f32 = 4.0;
+const R: f64 = 4.0;
 
 struct LogisticMapOptions {
-    x: f32,
-    r: f32,
+    x: f64,
+    r: f64,
     size: usize,
 }
 
-fn generate_map(opt: LogisticMapOptions) -> Vec<f32> {
+fn generate_map(opt: LogisticMapOptions) -> Vec<f64> {
     let mut pixels = Vec::with_capacity(opt.size);
     let mut x = opt.x;
 
@@ -27,7 +27,7 @@ fn argsort<T: Ord>(vec: &Vec<T>) -> Vec<usize> {
     indices
 }
 
-fn confuse_xor(im: &Vec<[u8; 3]>, enc_map: &Vec<f32>) -> Vec<[u8; 3]> {
+fn confuse_xor(im: &Vec<[u8; 3]>, enc_map: &Vec<f64>) -> Vec<[u8; 3]> {
     let mut enc_pixels = Vec::with_capacity(im.len());
 
     for (i, pixel) in enc_map.iter().map(
@@ -47,7 +47,7 @@ enum DiffuseDirection {
     Forward,
     Backward,
 }
-fn diffuse(im: &Vec<[u8; 3]>, enc_map: &Vec<f32>, direction: DiffuseDirection) -> Vec<[u8; 3]> {
+fn diffuse(im: &Vec<[u8; 3]>, enc_map: &Vec<f64>, direction: DiffuseDirection) -> Vec<[u8; 3]> {
     let enc_map = enc_map
         .iter()
         .map(|&x| x.to_bits())
@@ -78,8 +78,7 @@ fn diffuse(im: &Vec<[u8; 3]>, enc_map: &Vec<f32>, direction: DiffuseDirection) -
     diffuse_pixels
 }
 
-#[allow(dead_code)]
-pub fn encode(im: &Vec<[u8; 3]>, x0: f32) -> Vec<[u8; 3]> {
+pub fn encode(im: &Vec<[u8; 3]>, x0: f64) -> Vec<[u8; 3]> {
     let enc_map = generate_map(LogisticMapOptions {
         x: x0,
         r: R,  
@@ -90,8 +89,7 @@ pub fn encode(im: &Vec<[u8; 3]>, x0: f32) -> Vec<[u8; 3]> {
     confuse_xor(&im, &enc_map)
 }
 
-#[allow(dead_code)]
-pub fn decode(im: &Vec<[u8; 3]>, x0: f32) -> Vec<[u8; 3]> {
+pub fn decode(im: &Vec<[u8; 3]>, x0: f64) -> Vec<[u8; 3]> {
     let enc_map = generate_map(LogisticMapOptions {
         x: x0,
         r: R,  
