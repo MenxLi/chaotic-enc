@@ -9,14 +9,14 @@
 <body>
     <title>Image encoder</title>
 
-    <div id="input-container">
+    <div id="input-container" class="container">
         <div id="secret-container">
             <div id="drop-zone" style="display: none;">
                 <p>Drag and drop an image file here.</p>
                 <p>Supported formats: PNG, JPEG, BMP, ...</p>
             </div>
 
-            <label>Select an image file.</label>
+            <label>Select an image file</label>
             <input type="file" id="fileInput" accept="image/*" required>
             <br>
             <label for="secretInput">Secret:</label>
@@ -36,14 +36,14 @@
         </div>
     </div>
 
-    <div id="output-container">
-        <div id="downloadBtnContainer">
-            <button id="downloadBtn" style="display: none;">Download Image</button>
+    <div id="output-container" class="container">
+        <div id="error"></div>
+        <div id="downloadBtnContainer" style="display: none">
+            <button id="downloadBtn">Download Image</button>
         </div>
-        <label id="hint">Enter a secret and select an image file to encode / decode.</label>
+        <label id="hint">Enter a secret and select an image file to encode / decode</label>
         <div id="inputImg"></div>
         <div id="output"></div>
-        <div id="error"></div>
     </div>
 
     <div id="footer">
@@ -71,6 +71,7 @@
     const hintLabel = document.getElementById('hint');
     const encodeButton = document.getElementById('encodeButton');
     const decodeButton = document.getElementById('decodeButton');
+    const downloadBtnContainer = document.getElementById('downloadBtnContainer');
     const downloadBtn = document.getElementById('downloadBtn');
     const errorDiv = document.getElementById('error');
     const worker = new Worker('./worker.js', { type: 'module' });
@@ -109,8 +110,8 @@
         outputDiv.innerHTML = '';
         errorDiv.textContent = '';
         errorDiv.style.display = 'none';
-        downloadBtn.style.display = 'none';
-        hintLabel.textContent = 'Enter a secret and select an image file to encode / decode.';
+        downloadBtnContainer.style.display = 'none';
+        hintLabel.textContent = 'Enter a secret and select an image file to encode / decode';
     }
 
     async function showImage(imBlob) {
@@ -124,11 +125,12 @@
         imgElem.alt = 'Image';
         outputDiv.appendChild(imgElem);
 
-        downloadBtn.style.display = 'block';
+        downloadBtnContainer.style.display = 'block';
         downloadBtn.onclick = () => {
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'image.png';
+            const timeName = new Date().toISOString().replace(/[:.]/g, '-');
+            a.download = `img-${timeName}.png`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
