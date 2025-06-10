@@ -124,7 +124,7 @@ pub fn encode(im: &[u8], secret: &str, max_side: i32, as_type: &str) -> Box<[u8]
     let seed = str2f(&secret);
     console_log!("Seed: {}", seed);
 
-    let pixels = logistic_map::encode(&im_v, seed);
+    let pixels = logistic_map::encode::<3>(&im_v, seed);
 
     vec2imblob(&pixels, im_opt, None, match as_type {
         "png" => ImageType::Png,
@@ -142,7 +142,7 @@ pub fn decode(im: &[u8], secret: &str, max_side: i32, as_type: &str) -> Box<[u8]
     let seed = str2f(&secret);
     console_log!("Seed: {}", seed);
 
-    let pixels = logistic_map::decode(&im_v, seed);
+    let pixels = logistic_map::decode::<3>(&im_v, seed);
 
     vec2imblob(&pixels, im_opt, max_side, match as_type {
         "png" => ImageType::Png,
