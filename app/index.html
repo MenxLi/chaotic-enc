@@ -7,19 +7,26 @@
 </head>
 
 <body>
-    <title>Image encoder</title>
+    <title>Image chiper</title>
+    <div class="container">
+        <h2>Image chiper</h2>
+        <p>
+            This app encode your image to pure noise, 
+            only person with the secret can decode it back. 
+            The code runs entirely in your browser, 
+            so your image and secret are always safe and private :)
+        </p>
+    </div>
 
     <div id="input-container" class="container">
-        <label>
-            Select an image file and enter a secret to encode / decode
-        </label>
+        Select an image file and enter a secret to encode / decode.
         <div id="secret-container">
             <div id="drop-zone" style="display: none;">
                 <p>Drag and drop an image file here.</p>
                 <p>Supported formats: PNG, JPEG, BMP, ...</p>
             </div>
 
-            <input type="file" id="fileInput" accept="image/*" required>
+            <input type="file" id="fileInput" accept="image/*" capture="environment" required>
             <br>
             <label for="secretInput">Secret:</label>
             <input id="secretInput" placeholder="Enter your secret here" autocomplete="off">
@@ -40,32 +47,27 @@
                 <select id="imTypeSelect">
                     <option value="png">PNG</option>
                     <option value="jpeg">JPEG</option>
-                </select>
+                </select> ✨
             </div>
         </div>
     </div>
 
-    <div id="output-container" class="container">
-        <label id="hint"></label>
+    <div id="output-container" class="container" style="opacity: 0;">
         <div id="error"></div>
-        <div id="warning" style="display: none">
-            Encode as JPEG will introduce noise to recovered image.
-        </div>
         <div id="inputImg"></div>
         <div id="output"></div>
-        <div id="downloadBtnContainer" style="display: none">
+        <label id="hint"></label>
+        <div id="downloadBtn-container" style="display: none">
             <button id="downloadBtn">Download Image</button>
         </div>
     </div>
 
-    <div id="footer">
-        <p style="text-align: center; font-size: 0.75em; color: #666">
-            The code runs entirely in your browser using WebAssembly. 
-            <br>
+    <footer id="footer">
+        <p style="text-align: center; font-size: 0.8rem;">
             The source code is available at 
             <a href="https://github.com/MenxLi/chaotic-enc">menxli/chaotic-enc</a>.
         </p>
-    </div>
+    </footer>
 
 </body>
 

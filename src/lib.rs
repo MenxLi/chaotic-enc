@@ -11,10 +11,6 @@ use image::{self, ImageEncoder};
 extern "C" {
     #[wasm_bindgen(js_namespace = console)]
     fn log(s: &str);
-    #[wasm_bindgen(js_namespace = console, js_name = log)]
-    fn log_u32(a: u32);
-    #[wasm_bindgen(js_namespace = console, js_name = log)]
-    fn log_many(a: &str, b: &str);
 }
 macro_rules! console_log {
     ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
@@ -30,34 +26,37 @@ fn str2f(s: &str) -> f64 {
     let mut hasher = DefaultHasher::new();
     s.hash(&mut hasher);
     let hash = hasher.finish();
-    let x = (hash as f64) / (u64::MAX as f64);
-    x
+    (hash as f64) / (u64::MAX as f64)
+}
+
+fn maybe_resize(img: image::RgbImage, max_side: u32) -> (image::RgbImage, u32, u32) {
+    let (width, height) = img.dimensions();
+    if width > max_side || height > max_side {
+        let scale = max_side as f64 / width.max(height) as f64;
+        let new_width = (width as f64 * scale).round() as u32;
+        let new_height = (height as f64 * scale).round() as u32;
+        let resized_img = image::imageops::resize(
+            &img, new_width, new_height, 
+            image::imageops::FilterType::Lanczos3
+        );
+        (resized_img, new_width, new_height)
+    } else {
+        (img, width, height)
+    }
 }
 
 fn img2vec(im: &[u8], limit_max_side: Option<u32>) -> (Vec<u8>, ImageOptions) {
     let img = image::load_from_memory(im).expect("Failed to load image");
     let mut rgb = img.to_rgb8();
-
     if let Some(max_side) = limit_max_side {
-        let (mut width, mut height) = rgb.dimensions();
-        if width > max_side || height > max_side {
-            let scale = max_side as f64 / width.max(height) as f64;
-            width = (width as f64 * scale).round() as u32;
-            height = (height as f64 * scale).round() as u32;
-            rgb = image::imageops::resize(
-                &rgb, width, height, 
-                image::imageops::FilterType::Lanczos3
-            );
-        }
+        (rgb, _, _) = maybe_resize(rgb, max_side);
     }
-
     let mut pixels = Vec::with_capacity(rgb.width() as usize * rgb.height() as usize * 3);
     for pixel in rgb.pixels() {
         pixels.push(pixel[0]);
         pixels.push(pixel[1]);
         pixels.push(pixel[2]);
     };
-    
     (pixels, ImageOptions {
         width: rgb.width(),
         height: rgb.height(),
@@ -72,7 +71,6 @@ enum ImageType {
 
 fn vec2imblob(pixels: &Vec<u8>, im_opt: ImageOptions, limit_max_side: Option<u32>, im_type: ImageType) -> Box<[u8]> {
     let ImageOptions { mut width, mut height , channels} = im_opt;
-
     let mut img = image::RgbImage::new(width, height);
     for (i, pixel) in pixels.chunks(channels as usize).enumerate() {
         let x = (i % width as usize) as u32;
@@ -83,20 +81,9 @@ fn vec2imblob(pixels: &Vec<u8>, im_opt: ImageOptions, limit_max_side: Option<u32
             pixel[2],
         ]));
     };
-
     if let Some(max_side) = limit_max_side {
-        if width > max_side || height > max_side {
-            let scale = max_side as f64 / width.max(height) as f64;
-            width = (width as f64 * scale).round() as u32;
-            height = (height as f64 * scale).round() as u32;
-            img = image::imageops::resize(
-                &img, width, height, 
-                image::imageops::FilterType::Lanczos3
-            );
-        }
+        (img, width, height) = maybe_resize(img, max_side);
     }
-
-    // Encode the image to PNG format
     let mut buf = Vec::new();
     match im_type {
         ImageType::Png => {
@@ -105,12 +92,11 @@ fn vec2imblob(pixels: &Vec<u8>, im_opt: ImageOptions, limit_max_side: Option<u32
                 .expect("Failed to encode PNG image");
         },
         ImageType::Jpeg => {
-            image::codecs::jpeg::JpegEncoder::new_with_quality(&mut buf, 90)
+            image::codecs::jpeg::JpegEncoder::new_with_quality(&mut buf, 80)
                 .write_image(&img, width, height, image::ExtendedColorType::Rgb8)
                 .expect("Failed to encode JPEG image");
         },
     }
-
     console_log!("Export image, dimensions: {}x{}", width, height);
     buf.into_boxed_slice()
 }
@@ -123,9 +109,7 @@ pub fn encode(im: &[u8], secret: &str, max_side: i32, as_type: &str) -> Box<[u8]
     let (im_v, im_opt) = img2vec(im, max_side);
     let seed = str2f(&secret);
     console_log!("Seed: {}", seed);
-
     let pixels = logistic_map::encode::<3>(&im_v, seed);
-
     vec2imblob(&pixels, im_opt, None, match as_type {
         "png" => ImageType::Png,
         "jpeg" => ImageType::Jpeg,
@@ -141,9 +125,7 @@ pub fn decode(im: &[u8], secret: &str, max_side: i32, as_type: &str) -> Box<[u8]
     let (im_v, im_opt) = img2vec(im, None);
     let seed = str2f(&secret);
     console_log!("Seed: {}", seed);
-
     let pixels = logistic_map::decode::<3>(&im_v, seed);
-
     vec2imblob(&pixels, im_opt, max_side, match as_type {
         "png" => ImageType::Png,
         "jpeg" => ImageType::Jpeg,

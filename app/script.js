@@ -12,10 +12,13 @@ const outputDiv = document.getElementById('output');
 const hintLabel = document.getElementById('hint');
 const encodeButton = document.getElementById('encodeButton');
 const decodeButton = document.getElementById('decodeButton');
-const downloadBtnContainer = document.getElementById('downloadBtnContainer');
 const downloadBtn = document.getElementById('downloadBtn');
 const errorDiv = document.getElementById('error');
 const imTypeSelect = document.getElementById('imTypeSelect');
+const downloadBtnContainer = document.getElementById('downloadBtn-container');
+const outputContainer = document.getElementById('output-container');
+const footer = document.getElementById('footer');
+
 const worker = new Worker('./worker.js', { type: 'module' });
 
 const urlParams = new URLSearchParams(window.location.search);
@@ -42,22 +45,32 @@ function checkInput() {
 }
 
 async function showError(msg) {
+    ensureOutput();
     errorDiv.textContent = msg;
     errorDiv.style.display = 'block';
     console.error(msg);
 }
 
+function ensureOutput() {
+    outputContainer.style.opacity = '1';
+    footer.style.top = '0';
+}
+
 function resetOutput() {
+    outputContainer.style.opacity = '0';
     inputImgDiv.innerHTML = '';
     outputDiv.innerHTML = '';
     errorDiv.textContent = '';
     errorDiv.style.display = 'none';
     downloadBtnContainer.style.display = 'none';
     hintLabel.textContent = '';
+    footer.style.top = '-3rem';
 }
 
 async function showImage(imBlob) {
     resetOutput();
+    ensureOutput();
+
     hintLabel.textContent = '';
     const blob = new Blob([imBlob], { type: 'image/png' });
     const url = URL.createObjectURL(blob);
@@ -80,10 +93,13 @@ async function showImage(imBlob) {
 }
 
 async function encode_image() {
-    checkInput();
     resetOutput();
+    checkInput();
+
     const inputBlob = await getInputBlob();
     hintLabel.textContent = `Encoding...`;
+
+    ensureOutput();
     worker.postMessage({
         type: 'encode', 
         buffer: inputBlob, 
@@ -94,10 +110,13 @@ async function encode_image() {
 }
 
 async function decode_image() {
-    checkInput();
     resetOutput();
+    checkInput();
+
     const inputBlob = await getInputBlob();
     hintLabel.textContent = `Decoding...`;
+
+    ensureOutput();
     worker.postMessage({
         type: 'decode',  
         buffer: inputBlob, 
@@ -116,29 +135,34 @@ worker.onmessage = async (event) => {
     await showImage(event.data.buffer);
 };
 
-encodeButton.addEventListener('click', encode_image);
-decodeButton.addEventListener('click', decode_image);
-imTypeSelect.addEventListener('change', () => {
-    const warningDiv = document.getElementById('warning');
-    if (imTypeSelect.value === 'jpeg') {
-        warningDiv.style.display = 'block';
-    }
-    else {
-        warningDiv.style.display = 'none';
-    }
-});
-fileInput.addEventListener('change', ()=>{
-    resetOutput();
-    hintLabel.textContent += ' (Below is the selected image)';
-    const file = fileInput.files[0];
-    if (file) {
-        const imgElem = document.createElement('img');
-        imgElem.src = URL.createObjectURL(file);
-        imgElem.alt = 'Selected Image';
-        inputImgDiv.innerHTML = '';
-        inputImgDiv.appendChild(imgElem);
-    }
-});
+// Event listeners for inputs
+{
+    encodeButton.addEventListener('click', encode_image);
+    decodeButton.addEventListener('click', decode_image);
+
+    imTypeSelect.addEventListener('change', () => {
+        if (imTypeSelect.value === 'jpeg') {
+            encodeButton.disabled = true;
+        }
+        else {
+            encodeButton.disabled = false;
+        }
+    });
+
+    fileInput.addEventListener('change', ()=>{
+        resetOutput();
+        hintLabel.textContent = '(The selected image)';
+        const file = fileInput.files[0];
+        if (file) {
+            ensureOutput();
+            const imgElem = document.createElement('img');
+            imgElem.src = URL.createObjectURL(file);
+            imgElem.alt = 'Selected Image';
+            inputImgDiv.innerHTML = '';
+            inputImgDiv.appendChild(imgElem);
+        }
+    });
+}
 
 // handle drag and drop
 {
@@ -149,13 +173,15 @@ fileInput.addEventListener('change', ()=>{
         if (inDrag) return;
         dropZone.style.display = 'none';
     }
+
     window.addEventListener('dragover', (event) => {
         event.preventDefault();
         dropZone.style.display = 'block';
         inDrag = true;
-        if (taskId) { window.clearTimeout(taskId); }
+        if (taskId) {window.clearTimeout(taskId); }
         taskId = window.setTimeout(hideDropZone, 100);
     });
+    
     window.addEventListener('dragmove', (event) => {
         event.preventDefault();
         dropZone.style.display = 'block';
@@ -163,12 +189,14 @@ fileInput.addEventListener('change', ()=>{
         if (taskId) { window.clearTimeout(taskId); }
         taskId = window.setTimeout(hideDropZone, 100);
     });
+
     window.addEventListener('dragleave', (event) => {
         event.preventDefault();
         inDrag = false;
         if (taskId) { window.clearTimeout(taskId); }
         taskId = window.setTimeout(hideDropZone, 100);
     });
+
     dropZone.addEventListener('drop', (event) => {
         event.preventDefault();
         if (event.dataTransfer.files.length > 0) {

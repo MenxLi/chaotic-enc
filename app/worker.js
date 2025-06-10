@@ -4,7 +4,10 @@ await init();
 self.onmessage = async function(event) {
     const { type, buffer, secret, maxSide, outputAs } = event.data;
 
-    console.log('Worker received message:', event.data);
+    console.log(
+        'Worker received args:', 
+        type, secret, maxSide, outputAs
+    );
 
     if (type === 'encode') {
         const encoded = encode(buffer, secret, maxSide, outputAs);

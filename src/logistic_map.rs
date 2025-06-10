@@ -1,5 +1,3 @@
-
-
 const R: f64 = 4.0;
 
 struct LogisticMapOptions {
@@ -17,7 +15,6 @@ fn generate_map(opt: LogisticMapOptions) -> Vec<f64> {
         let color_value = x;
         pixels.push(color_value);
     };
-
     pixels
 }
 
@@ -47,9 +44,7 @@ fn diffuse<T: Copy>(im: &Vec<T>, enc_map: &Vec<f64>, direction: DiffuseDirection
         .iter()
         .map(|&x| x.to_bits())
         .collect();
-
     let indices = argsort(&enc_map);
-
     let mut diffuse_pixels = Vec::with_capacity(im.len());
 
     match direction {
@@ -74,8 +69,6 @@ fn diffuse<T: Copy>(im: &Vec<T>, enc_map: &Vec<f64>, direction: DiffuseDirection
             }
         },
     }
-
-
     diffuse_pixels
 }
 
@@ -86,7 +79,6 @@ pub fn encode<const C: usize>(im: &Vec<u8>, x0: f64) -> Vec<u8> {
         r: R,  
         size: im.len(),
     });
-
     let im = diffuse(&im, &enc_map, DiffuseDirection::Forward, C);
     confuse_xor(&im, &enc_map)
 }
@@ -97,7 +89,6 @@ pub fn decode<const C:usize>(im: &Vec<u8>, x0: f64) -> Vec<u8> {
         r: R,  
         size: im.len(),
     });
-
     let im = confuse_xor(&im, &enc_map);
     diffuse(&im, &enc_map, DiffuseDirection::Backward, C)
 }

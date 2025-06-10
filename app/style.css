@@ -1,6 +1,5 @@
 
 body {
-    font-family: Arial, sans-serif;
     padding: 1rem;
     margin-top: 1.5rem;
     max-width: 800px;
@@ -47,6 +46,7 @@ div#output-container {
     justify-content: center;
     background-color: whitesmoke;
     gap: 0.25rem;
+    transition: all 0.2s ease-in-out;
 }
 
 div#button-container {
@@ -68,4 +68,17 @@ div#error {
 div#warning {
     color: orange;
     font-weight: bold;
+}
+
+footer {
+    font-family: Arial, sans-serif;
+    position: relative;
+    top: -3rem;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.75rem;
+    color: #666;
 }
