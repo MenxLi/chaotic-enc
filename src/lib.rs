@@ -23,6 +23,7 @@ macro_rules! console_log {
 pub struct ImageOptions {
     pub width: u32,
     pub height: u32,
+    pub channels: u32,
 }
 
 fn str2f(s: &str) -> f64 {
@@ -33,7 +34,7 @@ fn str2f(s: &str) -> f64 {
     x
 }
 
-fn img2vec(im: &[u8], limit_max_side: Option<u32>) -> (Vec<[u8; 3]>, ImageOptions) {
+fn img2vec(im: &[u8], limit_max_side: Option<u32>) -> (Vec<u8>, ImageOptions) {
     let img = image::load_from_memory(im).expect("Failed to load image");
     let mut rgb = img.to_rgb8();
 
@@ -50,25 +51,32 @@ fn img2vec(im: &[u8], limit_max_side: Option<u32>) -> (Vec<[u8; 3]>, ImageOption
         }
     }
 
-    let mut pixels = Vec::with_capacity(rgb.width() as usize * rgb.height() as usize);
+    let mut pixels = Vec::with_capacity(rgb.width() as usize * rgb.height() as usize * 3);
     for pixel in rgb.pixels() {
-        pixels.push([pixel[0], pixel[1], pixel[2]]);
+        pixels.push(pixel[0]);
+        pixels.push(pixel[1]);
+        pixels.push(pixel[2]);
     };
     
     (pixels, ImageOptions {
         width: rgb.width(),
         height: rgb.height(),
+        channels: 3,
     })
 }
 
-fn vec2pngblob(pixels: &Vec<[u8; 3]>, im_opt: ImageOptions, limit_max_side: Option<u32>) -> Box<[u8]> {
-    let ImageOptions { mut width, mut height } = im_opt;
+fn vec2pngblob(pixels: &Vec<u8>, im_opt: ImageOptions, limit_max_side: Option<u32>) -> Box<[u8]> {
+    let ImageOptions { mut width, mut height , channels} = im_opt;
 
     let mut img = image::RgbImage::new(width, height);
-    for (i, pixel) in pixels.iter().enumerate() {
+    for (i, pixel) in pixels.chunks(channels as usize).enumerate() {
         let x = (i % width as usize) as u32;
         let y = (i / width as usize) as u32;
-        img.put_pixel(x, y, image::Rgb(*pixel));
+        img.put_pixel(x, y, image::Rgb([
+            pixel[0],
+            pixel[1],
+            pixel[2],
+        ]));
     };
 
     if let Some(max_side) = limit_max_side {
