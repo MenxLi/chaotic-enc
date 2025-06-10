@@ -10,40 +10,52 @@
     <title>Image encoder</title>
 
     <div id="input-container" class="container">
+        <label>
+            Select an image file and enter a secret to encode / decode
+        </label>
         <div id="secret-container">
             <div id="drop-zone" style="display: none;">
                 <p>Drag and drop an image file here.</p>
                 <p>Supported formats: PNG, JPEG, BMP, ...</p>
             </div>
 
-            <label>Select an image file</label>
             <input type="file" id="fileInput" accept="image/*" required>
             <br>
             <label for="secretInput">Secret:</label>
             <input id="secretInput" placeholder="Enter your secret here" autocomplete="off">
 
             <span style="margin-top: 0.25rem">
-            <input type="checkbox" id="limitMaxSide" checked>
-            <label for="limitMaxSide">Limit max side to </label>
-            <input type="number" id="maxSide" value="1024" min="1" max="25565" step="1" style="width: 4em;">
-            <label for="maxSide">px</label>
+                <input type="checkbox" id="limitMaxSide" checked>
+                <label for="limitMaxSide">Limit max side to </label>
+                <input type="number" id="maxSide" value="1024" min="1" max="25565" step="1" style="width: 4em;">
+                <label for="maxSide">px</label>
             </span>
         </div>
 
         <div id="button-container">
             <button id="encodeButton">Encode</button>
             <button id="decodeButton">Decode</button>
+            as 
+            <div style="display: flex">
+                <select id="imTypeSelect">
+                    <option value="png">PNG</option>
+                    <option value="jpeg">JPEG</option>
+                </select>
+            </div>
         </div>
     </div>
 
     <div id="output-container" class="container">
+        <label id="hint"></label>
         <div id="error"></div>
+        <div id="warning" style="display: none">
+            Encode as JPEG will introduce noise to recovered image.
+        </div>
+        <div id="inputImg"></div>
+        <div id="output"></div>
         <div id="downloadBtnContainer" style="display: none">
             <button id="downloadBtn">Download Image</button>
         </div>
-        <label id="hint">Enter a secret and select an image file to encode / decode</label>
-        <div id="inputImg"></div>
-        <div id="output"></div>
     </div>
 
     <div id="footer">

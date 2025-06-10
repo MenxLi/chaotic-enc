@@ -50,7 +50,10 @@ div#output-container {
 }
 
 div#button-container {
-    margin-top: 0.5rem;
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: row;
+    gap: 0.25rem;
 }
 
 img {
@@ -60,5 +63,9 @@ img {
 
 div#error {
     color: red;
+    font-weight: bold;
+}
+div#warning {
+    color: orange;
     font-weight: bold;
 }

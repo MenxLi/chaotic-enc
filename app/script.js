@@ -15,6 +15,7 @@ const decodeButton = document.getElementById('decodeButton');
 const downloadBtnContainer = document.getElementById('downloadBtnContainer');
 const downloadBtn = document.getElementById('downloadBtn');
 const errorDiv = document.getElementById('error');
+const imTypeSelect = document.getElementById('imTypeSelect');
 const worker = new Worker('./worker.js', { type: 'module' });
 
 const urlParams = new URLSearchParams(window.location.search);
@@ -52,7 +53,7 @@ function resetOutput() {
     errorDiv.textContent = '';
     errorDiv.style.display = 'none';
     downloadBtnContainer.style.display = 'none';
-    hintLabel.textContent = 'Enter a secret and select an image file to encode / decode';
+    hintLabel.textContent = '';
 }
 
 async function showImage(imBlob) {
@@ -71,7 +72,7 @@ async function showImage(imBlob) {
         const a = document.createElement('a');
         a.href = url;
         const timeName = new Date().toISOString().replace(/[:.]/g, '-');
-        a.download = `img-${timeName}.png`;
+        a.download = `img-${timeName}.${imTypeSelect.value}`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -87,7 +88,8 @@ async function encode_image() {
         type: 'encode', 
         buffer: inputBlob, 
         secret: secretInput.value, 
-        maxSide: limitMaxSideInput.checked ? parseInt(maxSideInput.value) : -1
+        maxSide: limitMaxSideInput.checked ? parseInt(maxSideInput.value) : -1, 
+        outputAs: imTypeSelect.value
         });
 }
 
@@ -100,13 +102,14 @@ async function decode_image() {
         type: 'decode',  
         buffer: inputBlob, 
         secret: secretInput.value, 
-        maxSide: limitMaxSideInput.checked ? parseInt(maxSideInput.value) : -1
+        maxSide: limitMaxSideInput.checked ? parseInt(maxSideInput.value) : -1, 
+        outputAs: imTypeSelect.value
         });
 }
 
 worker.onmessage = async (event) => {
     if (event.data.error) {
-        await showError(`Error decoding: ${event.data.error}`);
+        await showError(`Error: ${event.data.error}`);
         console.error(event.data.error);
         return;
     }
@@ -115,6 +118,15 @@ worker.onmessage = async (event) => {
 
 encodeButton.addEventListener('click', encode_image);
 decodeButton.addEventListener('click', decode_image);
+imTypeSelect.addEventListener('change', () => {
+    const warningDiv = document.getElementById('warning');
+    if (imTypeSelect.value === 'jpeg') {
+        warningDiv.style.display = 'block';
+    }
+    else {
+        warningDiv.style.display = 'none';
+    }
+});
 fileInput.addEventListener('change', ()=>{
     resetOutput();
     hintLabel.textContent += ' (Below is the selected image)';
