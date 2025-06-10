@@ -26,7 +26,8 @@
                 <p>Supported formats: PNG, JPEG, BMP, ...</p>
             </div>
 
-            <input type="file" id="fileInput" accept="image/*" capture="environment" required>
+            <!-- https://gist.github.com/danawoodman/4788404bc620d5392d111dba98c73873 -->
+            <input type="file" id="fileInput" accept="image/*;capture=camera" required>
             <br>
             <label for="secretInput">Secret:</label>
             <input id="secretInput" placeholder="Enter your secret here" autocomplete="off">
