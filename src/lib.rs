@@ -2,11 +2,9 @@ mod logistic_map;
 
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
-use std::u8;
-use wasm_bindgen::prelude::*;
 use image::{self, ImageEncoder};
+use wasm_bindgen::prelude::*;
 
-// https://rustwasm.github.io/wasm-bindgen/examples/console-log.html
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(js_namespace = console)]
@@ -19,7 +17,6 @@ macro_rules! console_log {
 pub struct ImageOptions {
     pub width: u32,
     pub height: u32,
-    pub channels: u32,
 }
 
 fn str2f(s: &str) -> f64 {
@@ -65,7 +62,6 @@ fn img2vec(im: &[u8], limit_max_side: Option<u32>) -> Result<(Vec<u8>, ImageOpti
     Ok((pixels, ImageOptions {
         width: rgb.width(),
         height: rgb.height(),
-        channels: 3,
     }))
 }
 
@@ -75,10 +71,10 @@ enum ImageType {
 }
 
 fn vec2imblob(pixels: &Vec<u8>, im_opt: ImageOptions, limit_max_side: Option<u32>, im_type: ImageType) -> Result<Box<[u8]>, String> {
-    let ImageOptions { mut width, mut height , channels} = im_opt;
+    let ImageOptions { mut width, mut height } = im_opt;
     let mut img = image::RgbImage::new(width, height);
 
-    for (i, pixel) in pixels.chunks(channels as usize).enumerate() {
+    for (i, pixel) in pixels.chunks(3).enumerate() {
         let x = (i % width as usize) as u32;
         let y = (i / width as usize) as u32;
         img.put_pixel(x, y, image::Rgb([

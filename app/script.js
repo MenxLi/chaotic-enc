@@ -67,12 +67,18 @@ function resetOutput() {
     footer.style.top = '-3rem';
 }
 
-async function showImage(imBlob, format) {
+/**
+ * Prepare the output area: display the image, and set up the download button.
+ * @param {string} type - 'encoded' / 'decoded'
+ * @param {Uint8Array} imBlob - The image data as a Uint8Array
+ * @param {string} format - The image format, 'png'/'jpeg'
+ */
+async function showImage(type, imBlob, format) {
     resetOutput();
     ensureOutput();
 
     hintLabel.textContent = '';
-    const blob = new Blob([imBlob], { type: 'image/png' });
+    const blob = new Blob([imBlob], { type: `image/${format}` });
     const url = URL.createObjectURL(blob);
 
     const imgElem = document.createElement('img');
@@ -84,8 +90,8 @@ async function showImage(imBlob, format) {
     downloadBtn.onclick = () => {
         const a = document.createElement('a');
         a.href = url;
-        const timeName = new Date().toISOString().replace(/[:.]/g, '-');
-        a.download = `img-${timeName}.${format}`;
+        const uuid = crypto.randomUUID().slice(0, 8);
+        a.download = `${type}-${uuid}.${format}`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -130,9 +136,11 @@ worker.onmessage = async (event) => {
     if (event.data.error) {
         await showError(`Error: ${event.data.error}`);
         console.error(event.data.error);
+        hintLabel.textContent = '';
         return;
     }
     await showImage(
+        event.data.type,
         event.data.buffer, 
         event.data.format
     );
@@ -154,10 +162,10 @@ worker.onmessage = async (event) => {
 
     fileInput.addEventListener('change', ()=>{
         resetOutput();
-        hintLabel.textContent = '(The selected image)';
         const file = fileInput.files[0];
         if (file) {
             ensureOutput();
+            hintLabel.textContent = '(The selected image)';
             const imgElem = document.createElement('img');
             imgElem.src = URL.createObjectURL(file);
             imgElem.alt = 'Selected Image';
