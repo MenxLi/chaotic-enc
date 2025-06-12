@@ -67,12 +67,6 @@ function resetOutput() {
     footer.style.top = '-3rem';
 }
 
-/**
- * Prepare the output area: display the image, and set up the download button.
- * @param {string} type - 'encoded' / 'decoded'
- * @param {Uint8Array} imBlob - The image data as a Uint8Array
- * @param {string} format - The image format, 'png'/'jpeg'
- */
 async function showImage(type, imBlob, format) {
     resetOutput();
     ensureOutput();
