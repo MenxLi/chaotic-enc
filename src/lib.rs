@@ -31,6 +31,7 @@ fn str2f(s: &str) -> f64 {
 
 fn maybe_resize(img: image::RgbImage, max_side: u32) -> (image::RgbImage, u32, u32) {
     let (width, height) = img.dimensions();
+
     if width > max_side || height > max_side {
         let scale = max_side as f64 / width.max(height) as f64;
         let new_width = (width as f64 * scale).round() as u32;
@@ -48,15 +49,18 @@ fn maybe_resize(img: image::RgbImage, max_side: u32) -> (image::RgbImage, u32, u
 fn img2vec(im: &[u8], limit_max_side: Option<u32>) -> (Vec<u8>, ImageOptions) {
     let img = image::load_from_memory(im).expect("Failed to load image");
     let mut rgb = img.to_rgb8();
+
     if let Some(max_side) = limit_max_side {
         (rgb, _, _) = maybe_resize(rgb, max_side);
     }
+
     let mut pixels = Vec::with_capacity(rgb.width() as usize * rgb.height() as usize * 3);
     for pixel in rgb.pixels() {
         pixels.push(pixel[0]);
         pixels.push(pixel[1]);
         pixels.push(pixel[2]);
     };
+
     (pixels, ImageOptions {
         width: rgb.width(),
         height: rgb.height(),
@@ -72,6 +76,7 @@ enum ImageType {
 fn vec2imblob(pixels: &Vec<u8>, im_opt: ImageOptions, limit_max_side: Option<u32>, im_type: ImageType) -> Box<[u8]> {
     let ImageOptions { mut width, mut height , channels} = im_opt;
     let mut img = image::RgbImage::new(width, height);
+
     for (i, pixel) in pixels.chunks(channels as usize).enumerate() {
         let x = (i % width as usize) as u32;
         let y = (i / width as usize) as u32;
@@ -81,9 +86,11 @@ fn vec2imblob(pixels: &Vec<u8>, im_opt: ImageOptions, limit_max_side: Option<u32
             pixel[2],
         ]));
     };
+
     if let Some(max_side) = limit_max_side {
         (img, width, height) = maybe_resize(img, max_side);
     }
+
     let mut buf = Vec::new();
     match im_type {
         ImageType::Png => {
@@ -98,6 +105,7 @@ fn vec2imblob(pixels: &Vec<u8>, im_opt: ImageOptions, limit_max_side: Option<u32
         },
     }
     console_log!("Export image, dimensions: {}x{}", width, height);
+
     buf.into_boxed_slice()
 }
 
@@ -106,9 +114,10 @@ pub fn encode(im: &[u8], secret: &str, max_side: i32, as_type: &str) -> Box<[u8]
     console_log!("Encoding image with secret: {}, max_side: {}", secret, max_side);
     let max_side = if max_side < 1 { None } else { Some(max_side as u32) };
 
-    let (im_v, im_opt) = img2vec(im, max_side);
     let seed = str2f(&secret);
     console_log!("Seed: {}", seed);
+
+    let (im_v, im_opt) = img2vec(im, max_side);
     let pixels = logistic_map::encode::<3>(&im_v, seed);
     vec2imblob(&pixels, im_opt, None, match as_type {
         "png" => ImageType::Png,
@@ -122,9 +131,10 @@ pub fn decode(im: &[u8], secret: &str, max_side: i32, as_type: &str) -> Box<[u8]
     console_log!("Decoding image with secret: {}, max_side: {}", secret, max_side);
     let max_side = if max_side < 1 { None } else { Some(max_side as u32) };
 
-    let (im_v, im_opt) = img2vec(im, None);
     let seed = str2f(&secret);
     console_log!("Seed: {}", seed);
+
+    let (im_v, im_opt) = img2vec(im, None);
     let pixels = logistic_map::decode::<3>(&im_v, seed);
     vec2imblob(&pixels, im_opt, max_side, match as_type {
         "png" => ImageType::Png,

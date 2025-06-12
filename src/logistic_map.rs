@@ -38,9 +38,9 @@ enum DiffuseDirection {
     Forward,
     Backward,
 }
-fn diffuse<T: Copy>(im: &Vec<T>, enc_map: &Vec<f64>, direction: DiffuseDirection, chunk_size: usize) -> Vec<T> 
+fn diffuse<const C: usize>(im: &Vec<u8>, enc_map: &Vec<f64>, direction: DiffuseDirection) -> Vec<u8> 
 {
-    let enc_map = enc_map[..im.len()/chunk_size]
+    let enc_map = enc_map[..im.len()/C]
         .iter()
         .map(|&x| x.to_bits())
         .collect();
@@ -50,20 +50,20 @@ fn diffuse<T: Copy>(im: &Vec<T>, enc_map: &Vec<f64>, direction: DiffuseDirection
     match direction {
         DiffuseDirection::Forward => {
             for &index in &indices {
-                for i in 0..chunk_size {
-                    let index = index * chunk_size + i;
+                for i in 0..C {
+                    let index = index * C + i;
                     diffuse_pixels.push(im[index]);
                 }
             }
         },
         DiffuseDirection::Backward => {
-            let mut lookup: Vec<usize> = vec![0; im.len() / chunk_size];
+            let mut lookup: Vec<usize> = vec![0; im.len() / C];
             for (i, &index) in indices.iter().enumerate() {
                 lookup[index] = i;
             }
             for &index in &lookup {
-                for i in 0..chunk_size {
-                    let index = index * chunk_size + i;
+                for i in 0..C {
+                    let index = index * C + i;
                     diffuse_pixels.push(im[index]);
                 }
             }
@@ -72,14 +72,15 @@ fn diffuse<T: Copy>(im: &Vec<T>, enc_map: &Vec<f64>, direction: DiffuseDirection
     diffuse_pixels
 }
 
-// C: channel size, e.g. 3 for RGB
+// C: channel size for diffusion process, reduce computation with higher C
 pub fn encode<const C: usize>(im: &Vec<u8>, x0: f64) -> Vec<u8> {
     let enc_map = generate_map(LogisticMapOptions {
         x: x0,
         r: R,  
         size: im.len(),
     });
-    let im = diffuse(&im, &enc_map, DiffuseDirection::Forward, C);
+
+    let im = diffuse::<C>(&im, &enc_map, DiffuseDirection::Forward);
     confuse_xor(&im, &enc_map)
 }
 
@@ -89,6 +90,7 @@ pub fn decode<const C:usize>(im: &Vec<u8>, x0: f64) -> Vec<u8> {
         r: R,  
         size: im.len(),
     });
+
     let im = confuse_xor(&im, &enc_map);
-    diffuse(&im, &enc_map, DiffuseDirection::Backward, C)
+    diffuse::<C>(&im, &enc_map, DiffuseDirection::Backward)
 }

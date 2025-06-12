@@ -11,11 +11,11 @@ self.onmessage = async function(event) {
 
     if (type === 'encode') {
         const encoded = encode(buffer, secret, maxSide, outputAs);
-        self.postMessage({ type: 'encoded', buffer: encoded });
+        self.postMessage({ type: 'encoded', buffer: encoded, format: outputAs });
     }
 
     if (type === 'decode') {
         const decoded = decode(buffer, secret, maxSide, outputAs);
-        self.postMessage({ type: 'decoded', buffer: decoded });
+        self.postMessage({ type: 'decoded', buffer: decoded, format: outputAs });
     }
 }

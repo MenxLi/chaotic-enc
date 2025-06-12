@@ -33,7 +33,7 @@ async function getInputBlob() {
     return new Uint8Array(arrayBuffer);
 }
 
-function checkInput() {
+function checkInputRaise() {
     if (fileInput.files.length === 0) {
         showError("No image file selected");
         throw new Error("No image file selected");
@@ -67,7 +67,7 @@ function resetOutput() {
     footer.style.top = '-3rem';
 }
 
-async function showImage(imBlob) {
+async function showImage(imBlob, format) {
     resetOutput();
     ensureOutput();
 
@@ -85,7 +85,7 @@ async function showImage(imBlob) {
         const a = document.createElement('a');
         a.href = url;
         const timeName = new Date().toISOString().replace(/[:.]/g, '-');
-        a.download = `img-${timeName}.${imTypeSelect.value}`;
+        a.download = `img-${timeName}.${format}`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -93,8 +93,8 @@ async function showImage(imBlob) {
 }
 
 async function encode_image() {
+    checkInputRaise();
     resetOutput();
-    checkInput();
 
     const inputBlob = await getInputBlob();
     hintLabel.textContent = `Encoding...`;
@@ -110,8 +110,8 @@ async function encode_image() {
 }
 
 async function decode_image() {
+    checkInputRaise();
     resetOutput();
-    checkInput();
 
     const inputBlob = await getInputBlob();
     hintLabel.textContent = `Decoding...`;
@@ -132,7 +132,10 @@ worker.onmessage = async (event) => {
         console.error(event.data.error);
         return;
     }
-    await showImage(event.data.buffer);
+    await showImage(
+        event.data.buffer, 
+        event.data.format
+    );
 };
 
 // Event listeners for inputs
