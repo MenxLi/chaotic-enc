@@ -120,7 +120,7 @@ pub fn encode(im: &[u8], secret: &str, max_side: i32, as_type: &str) -> Result<B
     vec2imblob(&pixels, im_opt, None, match as_type {
         "png" => ImageType::Png,
         "jpeg" => ImageType::Jpeg,
-        _ => panic!("Unsupported image type: {}", as_type),
+        _ => return Err(format!("Unsupported image type: {}", as_type)),
     })
 }
 
@@ -137,7 +137,7 @@ pub fn decode(im: &[u8], secret: &str, max_side: i32, as_type: &str) -> Result<B
     vec2imblob(&pixels, im_opt, max_side, match as_type {
         "png" => ImageType::Png,
         "jpeg" => ImageType::Jpeg,
-        _ => panic!("Unsupported image type: {}", as_type),
+        _ => return Err(format!("Unsupported image type: {}", as_type)),
     })
 }
 
@@ -152,13 +152,7 @@ pub fn stega_encode(
 
     console_log!("Encoding stega image");
     let max_side = if max_side < 1 { None } else { Some(max_side as u32) };
-    let seed: Option<f64> = match secret {
-        "" => None,
-        s => {
-            console_log!("Seed: {}", s);
-            Some(str2f(s))
-        },
-    };
+    let seed = Some(str2f(secret));
 
     let (mut im_v, im_opt) = img2vec(im, max_side)?;
     stega::inject_lsb(&mut im_v[..], message, seed)?;
@@ -174,13 +168,7 @@ pub fn stega_decode(
 ) -> Result<String, String> {
     console_log!("Decoding stega image");
     let max_side = if max_side < 1 { None } else { Some(max_side as u32) };
-    let seed: Option<f64> = match secret {
-        "" => None,
-        s => {
-            console_log!("Seed: {}", s);
-            Some(str2f(s))
-        },
-    };
+    let seed = Some(str2f(secret));
 
     let (im_v, _) = img2vec(im, max_side)?;
     stega::extract_lsb(&im_v[..], seed)

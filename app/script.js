@@ -27,7 +27,7 @@ const footer = document.getElementById('footer');
 const worker = new Worker('./worker.js', { type: 'module' });
 
 function onModeChange(mode) {
-    if (mode === 'cipher') {
+    if (mode === 'crypto') {
         msgInputContainer.style.display = 'none';
         imTypeSelect.disabled = false;
         imTypeContainer.style.display = 'block';
@@ -38,6 +38,12 @@ function onModeChange(mode) {
         imTypeSelect.disabled = true;
         imTypeContainer.style.display = 'none';
     }
+    const urlParams = new URLSearchParams(window.location.search);
+    // remove existing mode and secret params
+    urlParams.delete('mode');
+    urlParams.delete('m');
+    urlParams.set('m', mode);
+    window.history.replaceState({}, '', `${window.location.pathname}?${urlParams.toString()}`);
 }
 
 // handle initial mode setup
@@ -57,18 +63,19 @@ function onModeChange(mode) {
             onModeChange('stegano');
             break;
         case 'cipher':
+        case 'crypto':
         case 'cryptography':
         default:
             cipherModeInput.checked = true;
             steganoModeInput.checked = false;
-            onModeChange('cipher');
+            onModeChange('crypto');
             break;
     }
 }
 
 function getMode() {
     if (cipherModeInput.checked) {
-        return 'cipher';
+        return 'crypto';
     } else if (steganoModeInput.checked) {
         return 'stegano';
     }
@@ -87,8 +94,10 @@ function checkInputRaise() {
         throw new Error("No image file selected");
     }
     if (secretInput.value.trim() === '') {
-        showError("Secret cannot be empty");
-        throw new Error("Secret cannot be empty");
+        if (getMode() === 'crypto') {
+            showError("Secret cannot be empty");
+            throw new Error("Secret cannot be empty");
+        }
     }
 }
 
@@ -149,7 +158,7 @@ async function encode_image() {
 
     ensureOutput();
     switch (getMode()) {
-        case 'cipher':
+        case 'crypto':
             worker.postMessage({
                 type: 'encode', 
                 buffer: inputBlob, 
@@ -181,7 +190,7 @@ async function decode_image() {
 
     ensureOutput();
     switch (getMode()) {
-        case 'cipher':
+        case 'crypto':
             worker.postMessage({
                 type: 'decode',  
                 buffer: inputBlob, 
@@ -241,7 +250,7 @@ worker.onmessage = async (event) => {
     })
     cipherModeInput.addEventListener('change', () => {
         if (cipherModeInput.checked) {
-            onModeChange('cipher');
+            onModeChange('crypto');
         }
     })
 
