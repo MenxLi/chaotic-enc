@@ -82,3 +82,10 @@ footer {
     font-size: 0.75rem;
     color: #666;
 }
+
+textarea {
+    width: 100%;
+    min-height: 3rem;
+    resize: vertical;
+    height: fit-content;
+}

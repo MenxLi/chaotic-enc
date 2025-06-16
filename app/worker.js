@@ -1,8 +1,8 @@
-import init, { encode, decode } from './pkg/chaotic_enc.js';
+import init, { encode, decode, stega_encode, stega_decode } from './pkg/chaotic_enc.js';
 
 await init();
 self.onmessage = async function(event) {
-    const { type, buffer, secret, maxSide, outputAs } = event.data;
+    const { type, buffer, message, secret, maxSide, outputAs } = event.data;
 
     console.log(
         'Worker received args:', 
@@ -26,6 +26,24 @@ self.onmessage = async function(event) {
                 format: outputAs 
             });
         }
+
+        if (type === 'stega_encode') {
+            const encoded = stega_encode(buffer, message, secret, maxSide);
+            self.postMessage({
+                type: 'encoded_stega',
+                buffer: encoded,
+                format: 'png', 
+            });
+        }
+
+        if (type === 'stega_decode') {
+            const decoded = stega_decode(buffer, secret, maxSide);
+            self.postMessage({
+                type: 'decoded_stega',
+                message: decoded,
+            });
+        }
+
     }
     catch (error) {
         console.error('Worker error:', error);

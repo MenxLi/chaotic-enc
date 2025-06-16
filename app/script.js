@@ -3,6 +3,10 @@ if (!window.WebAssembly) {
     alert("WebAssembly is not supported in your browser. Please use a modern browser.");
 }
 
+const cipherModeInput = document.getElementById('cipherModeInput');
+const steganoModeInput = document.getElementById('steganoModeInput');
+const msgInputContainer = document.getElementById('msgInput-container');
+const msgInput = document.getElementById('msgInput');
 const secretInput = document.getElementById('secretInput');
 const fileInput = document.getElementById('fileInput');
 const limitMaxSideInput = document.getElementById('limitMaxSide');
@@ -15,16 +19,60 @@ const decodeButton = document.getElementById('decodeButton');
 const downloadBtn = document.getElementById('downloadBtn');
 const errorDiv = document.getElementById('error');
 const imTypeSelect = document.getElementById('imTypeSelect');
+const imTypeContainer = document.getElementById('imType-container');
 const downloadBtnContainer = document.getElementById('downloadBtn-container');
 const outputContainer = document.getElementById('output-container');
 const footer = document.getElementById('footer');
 
 const worker = new Worker('./worker.js', { type: 'module' });
 
-const urlParams = new URLSearchParams(window.location.search);
-const secretFromUrl = urlParams.get('secret') || urlParams.get('s');
-if (secretFromUrl) {
-    secretInput.value = decodeURIComponent(secretFromUrl);
+function onModeChange(mode) {
+    if (mode === 'cipher') {
+        msgInputContainer.style.display = 'none';
+        imTypeSelect.disabled = false;
+        imTypeContainer.style.display = 'block';
+    } else if (mode === 'stegano') {
+        msgInputContainer.style.display = 'flex';
+        imTypeSelect.value = 'png';
+        imTypeSelect.dispatchEvent(new Event('change'));
+        imTypeSelect.disabled = true;
+        imTypeContainer.style.display = 'none';
+    }
+}
+
+// handle initial mode setup
+{
+    const urlParams = new URLSearchParams(window.location.search);
+    const secretFromUrl = urlParams.get('secret') || urlParams.get('s');
+    if (secretFromUrl) {
+        secretInput.value = decodeURIComponent(secretFromUrl);
+    }
+    const modeFromUrl = urlParams.get('mode') || urlParams.get('m');
+    switch (modeFromUrl) {
+        case 'stega':
+        case 'stegano':
+        case 'steganography':
+            cipherModeInput.checked = false;
+            steganoModeInput.checked = true;
+            onModeChange('stegano');
+            break;
+        case 'cipher':
+        case 'cryptography':
+        default:
+            cipherModeInput.checked = true;
+            steganoModeInput.checked = false;
+            onModeChange('cipher');
+            break;
+    }
+}
+
+function getMode() {
+    if (cipherModeInput.checked) {
+        return 'cipher';
+    } else if (steganoModeInput.checked) {
+        return 'stegano';
+    }
+    throw new Error("No mode selected");
 }
 
 async function getInputBlob() {
@@ -100,13 +148,28 @@ async function encode_image() {
     hintLabel.textContent = `Encoding...`;
 
     ensureOutput();
-    worker.postMessage({
-        type: 'encode', 
-        buffer: inputBlob, 
-        secret: secretInput.value, 
-        maxSide: limitMaxSideInput.checked ? parseInt(maxSideInput.value) : -1, 
-        outputAs: imTypeSelect.value
-        });
+    switch (getMode()) {
+        case 'cipher':
+            worker.postMessage({
+                type: 'encode', 
+                buffer: inputBlob, 
+                secret: secretInput.value, 
+                maxSide: limitMaxSideInput.checked ? parseInt(maxSideInput.value) : -1, 
+                outputAs: imTypeSelect.value
+            });
+            break;
+        case 'stegano':
+            worker.postMessage({
+                type: 'stega_encode', 
+                buffer: inputBlob, 
+                secret: secretInput.value, 
+                message: msgInput.value,
+                maxSide: limitMaxSideInput.checked ? parseInt(maxSideInput.value) : -1, 
+            });
+            break;
+        default:
+            throw new Error("Unknown mode");
+    }
 }
 
 async function decode_image() {
@@ -117,13 +180,27 @@ async function decode_image() {
     hintLabel.textContent = `Decoding...`;
 
     ensureOutput();
-    worker.postMessage({
-        type: 'decode',  
-        buffer: inputBlob, 
-        secret: secretInput.value, 
-        maxSide: limitMaxSideInput.checked ? parseInt(maxSideInput.value) : -1, 
-        outputAs: imTypeSelect.value
-        });
+    switch (getMode()) {
+        case 'cipher':
+            worker.postMessage({
+                type: 'decode',  
+                buffer: inputBlob, 
+                secret: secretInput.value, 
+                maxSide: limitMaxSideInput.checked ? parseInt(maxSideInput.value) : -1, 
+                outputAs: imTypeSelect.value
+            });
+            break;
+        case 'stegano':
+            worker.postMessage({
+                type: 'stega_decode',  
+                buffer: inputBlob, 
+                secret: secretInput.value, 
+                maxSide: limitMaxSideInput.checked ? parseInt(maxSideInput.value) : -1, 
+            });
+            break;
+        default:
+            throw new Error("Unknown mode");
+    }
 }
 
 worker.onmessage = async (event) => {
@@ -133,17 +210,40 @@ worker.onmessage = async (event) => {
         hintLabel.textContent = '';
         return;
     }
-    await showImage(
-        event.data.type,
-        event.data.buffer, 
-        event.data.format
-    );
+    if (event.data.buffer) {
+        await showImage(
+            event.data.type,
+            event.data.buffer, 
+            event.data.format
+        );
+    }
+    if (event.data.message) {
+        resetOutput();
+        ensureOutput();
+        hintLabel.textContent = '';
+        const messageElem = document.createElement('pre');
+        messageElem.textContent = event.data.message;
+        outputDiv.appendChild(messageElem);
+        messageElem.style.whiteSpace = 'pre-wrap';
+        downloadBtnContainer.style.display = 'none';
+    }
 };
 
 // Event listeners for inputs
 {
     encodeButton.addEventListener('click', encode_image);
     decodeButton.addEventListener('click', decode_image);
+
+    steganoModeInput.addEventListener('change', () => {
+        if (steganoModeInput.checked) {
+            onModeChange('stegano');
+        }
+    })
+    cipherModeInput.addEventListener('change', () => {
+        if (cipherModeInput.checked) {
+            onModeChange('cipher');
+        }
+    })
 
     imTypeSelect.addEventListener('change', () => {
         if (imTypeSelect.value === 'jpeg') {

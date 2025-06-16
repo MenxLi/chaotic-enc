@@ -11,11 +11,22 @@
     <div class="container">
         <h2>Image cipher</h2>
         <p>
-            This app encode your image to pure noise, 
-            only person with the secret can decode it back. 
-            The code runs entirely in your browser, 
-            so your image and secret are always safe and private :)
+            This app works as a image cryptography and steganography tool.
+            <br>
+            <ul>
+                <li>Cryptography: It makes your image to pure noise by encrypting it with a secret key. </li>
+                <li>Steganography: It hides a secret message inside an image.</li>
+            </ul>
+            The code runs entirely in your browser, so your data is always safe and private :)
         </p>
+
+        Mode: 
+        <span class="mode-select-span">
+            <input type="radio" name="mode" id="cipherModeInput" checked> Cryptography
+        </span>
+        <span class="mode-select-span">
+            <input type="radio" name="mode" id="steganoModeInput"> Steganography
+        </span>
     </div>
 
     <div id="input-container" class="container">
@@ -29,8 +40,15 @@
             <!-- https://gist.github.com/danawoodman/4788404bc620d5392d111dba98c73873 -->
             <input type="file" id="fileInput" accept="image/*;capture=camera" required>
             <br>
-            <label for="secretInput">Secret:</label>
-            <input id="secretInput" placeholder="Enter your secret here" autocomplete="off">
+
+            <div id="msgInput-container" style="display: none; flex-direction: column; margin-bottom: 0.5rem;">
+                <label for="msgInput">Message:</label>
+                <textarea id="msgInput" placeholder="Enter your message here" autocomplete="off" rows="3"></textarea>
+            </div>
+            <div id="secretInput-container" style="display: flex; flex-direction: column; margin-bottom: 0.5rem;">
+                <label for="secretInput">Secret:</label>
+                <input id="secretInput" placeholder="Your secret key for encryption / decryption." autocomplete="off">
+            </div>
 
             <span style="margin-top: 0.25rem">
                 <input type="checkbox" id="limitMaxSide" checked>
@@ -43,8 +61,8 @@
         <div id="button-container">
             <button id="encodeButton">Encode</button>
             <button id="decodeButton">Decode</button>
-            as 
-            <div style="display: flex">
+            <div style="display: block" id="imType-container">
+                as 
                 <select id="imTypeSelect">
                     <option value="png">PNG</option>
                     <option value="jpeg">JPEG</option>
