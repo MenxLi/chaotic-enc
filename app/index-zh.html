@@ -7,27 +7,31 @@
 </head>
 
 <body>
-    <title>Image cipher</title>
+    <title>图像加密工具</title>
     <div class="container">
-        <h2>Image cipher
-            <a href="./index-zh.html" id="lang-link">中文</a>
+        <h2>图像加密工具
+            <a href="./index.html" id="lang-link">English</a>
         </h2>
         <p>
-            This app works as a image cryptography and steganography tool.
+            本应用是一个用于图像加密和隐写的工具。
             <br>
             <ul>
-                <li>Cryptography: It makes your image to pure noise by encrypting it with a secret key. </li>
-                <li>Steganography: It hides a secret message inside an image.</li>
+                <li>
+                加密：将你的图像变成纯噪声，用密钥才能解密。
+                </li>
+                <li>
+                隐写：将秘密文本信息隐藏在图像中。
+                </li>
             </ul>
-            The code runs entirely in your browser, so your data is always safe and private :)
+            本应用完全在浏览器中运行，因此你的数据不会发送给任何服务器，始终保持安全:)
         </p>
 
-        Mode: 
+        模式：
         <span class="mode-select-span">
-            <input type="radio" name="mode" id="cipherModeInput" checked> Cryptography
+            <input type="radio" name="mode" id="cipherModeInput" checked> 加密
         </span>
         <span class="mode-select-span">
-            <input type="radio" name="mode" id="steganoModeInput"> Steganography
+            <input type="radio" name="mode" id="steganoModeInput"> 隐写
         </span>
     </div>
 
@@ -43,27 +47,27 @@
             <br>
 
             <div id="msgInput-container" style="display: none; flex-direction: column; margin-bottom: 0.5rem;">
-                <label for="msgInput">Message:</label>
+                <label for="msgInput">信息:</label>
                 <textarea id="msgInput" placeholder="Enter your message here" autocomplete="off" rows="3"></textarea>
             </div>
             <div id="secretInput-container" style="display: flex; flex-direction: column; margin-bottom: 0.5rem;">
-                <label for="secretInput">Secret:</label>
+                <label for="secretInput">密钥:</label>
                 <input id="secretInput" placeholder="Your secret key for encryption / decryption." autocomplete="off">
             </div>
 
             <span style="margin-top: 0.25rem">
                 <input type="checkbox" id="limitMaxSide" checked>
-                <label for="limitMaxSide">Limit max side to </label>
+                <label for="limitMaxSide"> 限制图像最长边为 </label>
                 <input type="number" id="maxSide" value="1024" min="1" max="25565" step="1" style="width: 4em;">
                 <label for="maxSide">px</label>
             </span>
         </div>
 
         <div id="button-container">
-            <button id="encodeButton">Encode</button>
-            <button id="decodeButton">Decode</button>
+            <button id="encodeButton"> 加密 </button>
+            <button id="decodeButton"> 解密 </button>
             <div style="display: block" id="imType-container">
-                as 
+                为
                 <select id="imTypeSelect">
                     <option value="png">PNG</option>
                     <option value="jpeg">JPEG</option>
@@ -84,7 +88,7 @@
 
     <footer id="footer">
         <p style="text-align: center; font-size: 0.8rem;">
-            The source code is available at 
+            源代码可见
             <a href="https://github.com/MenxLi/im-cipher">menxli/im-cipher</a>.
         </p>
     </footer>

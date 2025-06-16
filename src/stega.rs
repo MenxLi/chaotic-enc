@@ -85,7 +85,7 @@ pub fn extract_lsb(
     let msg_len = u32::from_le_bytes(msg_vec[0..4].try_into().unwrap()) as u32;
     if 4 + msg_len > msg_vec.len() as u32 {
         console_err!("Message length: {}, message channel length: {}", msg_len, msg_vec.len());
-        return Err("Failed to decode message length".to_string());
+        return Err("Failed to decode message".to_string());
     }
 
     let msg_raw = &msg_vec[4..4 + msg_len as usize];
