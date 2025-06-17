@@ -26,12 +26,16 @@ const footer = document.getElementById('footer');
 
 const worker = new Worker('./worker.js', { type: 'module' });
 
+const Mode = Object.freeze({
+    CRYPTO: 'crypto',
+    STEGANO: 'stegano'
+});
 function onModeChange(mode) {
-    if (mode === 'crypto') {
+    if (mode === Mode.CRYPTO) {
         msgInputContainer.style.display = 'none';
         imTypeSelect.disabled = false;
         imTypeContainer.style.display = 'block';
-    } else if (mode === 'stegano') {
+    } else if (mode === Mode.STEGANO) {
         msgInputContainer.style.display = 'flex';
         imTypeSelect.value = 'png';
         imTypeSelect.dispatchEvent(new Event('change'));
@@ -60,7 +64,7 @@ function onModeChange(mode) {
         case 'steganography':
             cipherModeInput.checked = false;
             steganoModeInput.checked = true;
-            onModeChange('stegano');
+            onModeChange(Mode.STEGANO);
             break;
         case 'cipher':
         case 'crypto':
@@ -68,16 +72,16 @@ function onModeChange(mode) {
         default:
             cipherModeInput.checked = true;
             steganoModeInput.checked = false;
-            onModeChange('crypto');
+            onModeChange(Mode.CRYPTO);
             break;
     }
 }
 
 function getMode() {
     if (cipherModeInput.checked) {
-        return 'crypto';
+        return Mode.CRYPTO;
     } else if (steganoModeInput.checked) {
-        return 'stegano';
+        return Mode.STEGANO;
     }
     throw new Error("No mode selected");
 }
@@ -93,11 +97,9 @@ function checkInputRaise() {
         showError("No image file selected");
         throw new Error("No image file selected");
     }
-    if (secretInput.value.trim() === '') {
-        if (getMode() === 'crypto') {
-            showError("Secret cannot be empty");
-            throw new Error("Secret cannot be empty");
-        }
+    if (secretInput.value.trim() === '' && getMode() === Mode.CRYPTO) {
+        showError("Secret cannot be empty");
+        throw new Error("Secret cannot be empty");
     }
 }
 
@@ -158,7 +160,7 @@ async function encode_image() {
 
     ensureOutput();
     switch (getMode()) {
-        case 'crypto':
+        case Mode.CRYPTO:
             worker.postMessage({
                 type: 'encode', 
                 buffer: inputBlob, 
@@ -167,7 +169,7 @@ async function encode_image() {
                 outputAs: imTypeSelect.value
             });
             break;
-        case 'stegano':
+        case Mode.STEGANO:
             worker.postMessage({
                 type: 'stega_encode', 
                 buffer: inputBlob, 
@@ -190,7 +192,7 @@ async function decode_image() {
 
     ensureOutput();
     switch (getMode()) {
-        case 'crypto':
+        case Mode.CRYPTO:
             worker.postMessage({
                 type: 'decode',  
                 buffer: inputBlob, 
@@ -199,7 +201,7 @@ async function decode_image() {
                 outputAs: imTypeSelect.value
             });
             break;
-        case 'stegano':
+        case Mode.STEGANO:
             worker.postMessage({
                 type: 'stega_decode',  
                 buffer: inputBlob, 
@@ -234,6 +236,7 @@ worker.onmessage = async (event) => {
         messageElem.textContent = event.data.message;
         outputDiv.appendChild(messageElem);
         messageElem.style.whiteSpace = 'pre-wrap';
+        messageElem.style.wordBreak = 'break-all';
         downloadBtnContainer.style.display = 'none';
     }
 };
@@ -245,12 +248,12 @@ worker.onmessage = async (event) => {
 
     steganoModeInput.addEventListener('change', () => {
         if (steganoModeInput.checked) {
-            onModeChange('stegano');
+            onModeChange(Mode.STEGANO);
         }
     })
     cipherModeInput.addEventListener('change', () => {
         if (cipherModeInput.checked) {
-            onModeChange('crypto');
+            onModeChange(Mode.CRYPTO);
         }
     })
 

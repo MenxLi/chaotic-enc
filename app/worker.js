@@ -13,7 +13,7 @@ self.onmessage = async function(event) {
         if (type === 'encode') {
             const encoded = encode(buffer, secret, maxSide, outputAs);
             self.postMessage({
-                type: 'encoded',
+                type,
                 buffer: encoded,
                 format: outputAs 
             });
@@ -21,7 +21,7 @@ self.onmessage = async function(event) {
         if (type === 'decode') {
             const decoded = decode(buffer, secret, maxSide, outputAs);
             self.postMessage({
-                type: 'decoded',
+                type, 
                 buffer: decoded,
                 format: outputAs 
             });
@@ -30,7 +30,7 @@ self.onmessage = async function(event) {
         if (type === 'stega_encode') {
             const encoded = stega_encode(buffer, message, secret, maxSide);
             self.postMessage({
-                type: 'stega_encode',
+                type, 
                 buffer: encoded,
                 format: 'png', 
             });
@@ -39,7 +39,7 @@ self.onmessage = async function(event) {
         if (type === 'stega_decode') {
             const decoded = stega_decode(buffer, secret, maxSide);
             self.postMessage({
-                type: 'stega_decode',
+                type, 
                 message: decoded,
             });
         }
